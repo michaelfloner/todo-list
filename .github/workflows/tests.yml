@@ -1,0 +1,103 @@
+name: Static analysis and tests
+on:
+  push:
+    branches:
+      - '**'
+
+env:
+  PHP_VERSION: "8.2"
+  PHP_EXTENSIONS: pdo pdo_pgsql
+
+jobs:
+  static_analysis:
+    runs-on: ubuntu-latest
+    name: Static analysis
+    environment: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP for CI
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+          tools: phpstan
+
+      - name: Load Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Load Composer cached dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --dev --no-scripts
+
+      - name: Code-style check
+        run: composer cs-check
+
+      - name: PHPStan
+        run: composer phpstan
+
+  tests:
+    runs-on: ubuntu-latest
+    name: Tests
+    environment: test
+
+    services:
+      postgres:
+        image: postgres:14.5
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP for CI
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          tools: phpunit
+          coverage: none
+
+      - name: Load Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Load Composer cached dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Prepare environment variables
+        run: mv .env.ci .env
+
+      - name: Set DB credentials
+        run: echo 'DATABASE_URL=pgsql://postgres:postgres@127.0.0.1:5432/postgres' >> .env
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-interaction --dev
+
+      - name: Run database migrations
+        run: composer migrate
+
+      - name: Validate database schema
+        run: composer db-validate
+
+      - name: Run tests
+        run: composer test

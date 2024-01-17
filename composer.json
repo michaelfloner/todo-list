@@ -1,0 +1,123 @@
+{
+    "type": "project",
+    "license": "proprietary",
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": ">=8.2",
+        "ext-ctype": "*",
+        "ext-iconv": "*",
+        "doctrine/doctrine-bundle": "^2.11",
+        "doctrine/doctrine-migrations-bundle": "^3.3",
+        "doctrine/orm": "^2.17",
+        "jawira/case-converter": "^3.5",
+        "lexik/jwt-authentication-bundle": "^2.20",
+        "nelmio/api-doc-bundle": "^4.12",
+        "nelmio/cors-bundle": "^2.4",
+        "phpdocumentor/reflection-docblock": "^5.3",
+        "phpdocumentor/type-resolver": "^1.7",
+        "phpstan/phpdoc-parser": "^1.24",
+        "symfony/console": "6.4.*",
+        "symfony/dotenv": "6.4.*",
+        "symfony/flex": "^2",
+        "symfony/framework-bundle": "6.4.*",
+        "symfony/property-access": "6.4.*",
+        "symfony/property-info": "6.4.*",
+        "symfony/runtime": "6.4.*",
+        "symfony/security-bundle": "6.4.*",
+        "symfony/serializer": "6.4.*",
+        "symfony/validator": "6.4.*",
+        "symfony/workflow": "6.4.*",
+        "symfony/yaml": "6.4.*"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "^10.5",
+        "slevomat/coding-standard": "^8.14",
+        "squizlabs/php_codesniffer": "^3.8",
+        "symfony/browser-kit": "6.4.*",
+        "symfony/css-selector": "6.4.*",
+        "symfony/maker-bundle": "^1.52",
+        "symfony/phpunit-bridge": "^7.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "symfony/flex": true,
+            "symfony/runtime": true,
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        },
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Tests\\": "tests/"
+        }
+    },
+    "replace": {
+        "symfony/polyfill-ctype": "*",
+        "symfony/polyfill-iconv": "*",
+        "symfony/polyfill-php72": "*",
+        "symfony/polyfill-php73": "*",
+        "symfony/polyfill-php74": "*",
+        "symfony/polyfill-php80": "*",
+        "symfony/polyfill-php81": "*",
+        "symfony/polyfill-php82": "*"
+    },
+    "scripts": {
+        "auto-scripts": {
+            "cache:clear": "symfony-cmd",
+            "assets:install %PUBLIC_DIR%": "symfony-cmd"
+        },
+        "post-install-cmd": [
+            "@auto-scripts"
+        ],
+        "post-update-cmd": [
+            "@auto-scripts"
+        ],
+        "db-validate": [
+            "php bin/console doctrine:schema:validate"
+        ],
+        "migrate": [
+            "php bin/console doctrine:migrations:migrate --no-interaction"
+        ],
+        "phpstan": [
+            "php -d memory_limit=-1 ./vendor/bin/phpstan analyse"
+        ],
+        "test": [
+            "php ./vendor/bin/phpunit -c phpunit.ci.xml"
+        ],
+        "test-local": [
+            "php bin/console doctrine:database:drop --if-exists --force --env=test",
+            "php bin/console doctrine:database:create --env=test",
+            "php bin/console doctrine:migrations:migrate --no-interaction --env=test",
+            "php ./vendor/bin/phpunit"
+        ],
+        "reset-db": [
+            "php bin/console doctrine:database:drop --if-exists --force",
+            "php bin/console doctrine:database:create",
+            "@migrate"
+        ],
+        "cs-check": [
+            "php -d error_reporting=0 ./vendor/bin/phpcs -s"
+        ],
+        "cs-fix": [
+            "php ./vendor/bin/phpcbf"
+        ]
+    },
+    "conflict": {
+        "symfony/symfony": "*"
+    },
+    "extra": {
+        "symfony": {
+            "allow-contrib": false,
+            "require": "6.4.*"
+        }
+    }
+}

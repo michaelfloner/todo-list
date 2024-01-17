@@ -1,0 +1,33 @@
+framework:
+    workflows:
+        task_state_workflow:
+            type: 'state_machine'
+            audit_trail:
+              enabled: true
+            supports:
+                - App\Entity\Task
+            marking_store:
+              property: 'stateAsString'
+              type: 'method'
+            places:
+                - !php/enum App\Entity\TaskState::TODO->value
+                - !php/enum App\Entity\TaskState::IN_PROGRESS->value
+                - !php/enum App\Entity\TaskState::COMPLETED->value
+                - !php/enum App\Entity\TaskState::DELETED->value
+            transitions:
+                  !php/const App\Flow\TaskTransition::IN_PROGRESS:
+                        from:
+                            - !php/enum App\Entity\TaskState::TODO->value
+                            - !php/enum App\Entity\TaskState::COMPLETED->value
+                        to: in_progress
+                  !php/const App\Flow\TaskTransition::COMPLETED:
+                        from:
+                            - !php/enum App\Entity\TaskState::IN_PROGRESS->value
+                        to:
+                            - !php/enum App\Entity\TaskState::COMPLETED->value
+                  !php/const App\Flow\TaskTransition::DELETED:
+                        from:
+                            - !php/enum App\Entity\TaskState::TODO->value
+                            - !php/enum App\Entity\TaskState::IN_PROGRESS->value
+                            - !php/enum App\Entity\TaskState::COMPLETED->value
+                        to: !php/enum App\Entity\TaskState::DELETED->value
